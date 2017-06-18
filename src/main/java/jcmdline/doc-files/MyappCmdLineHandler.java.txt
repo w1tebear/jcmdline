@@ -1,0 +1,29 @@
+package myapp;
+
+import jcmdline.AbstractHandlerDecorator;
+import jcmdline.HelpCmdLineHandler;
+import jcmdline.LoggerCmdLineHandler;
+import jcmdline.Parameter;
+import jcmdline.VersionCmdLineHandler;
+
+/**
+ * The CmdLineHandler to be used by all executables in the myapp package.
+ * Supports the following options:
+ *  -h, -?, -h!, -help, -help!, -version, -log
+ */
+public class MyAppCmdLineHandler extends AbstractHandlerDecorator {
+    public MyAppCmdLineHandler(String cmdName,
+                               String cmdDesc,
+                               String version,
+                               String helpText,
+                               String hiddenHelpText,
+                               Parameter[] options,
+                               Parameter[] args) {
+        super(new VersionCmdLineHandler(version,
+              new HelpCmdLineHandler(helpText, hiddenHelpText,
+                                     cmdName, cmdDesc, options, args)));
+    }
+    public boolean processParsedOptions(boolean parseStatus) {
+        return parseStatus;
+    }
+}
