@@ -1,0 +1,59 @@
+body {
+	background-color: white;
+	color: black;
+}
+p.small_heading {
+	background-color: #330099;
+	color: white;
+	margin-right: 0;
+	font-weight: bold;
+}
+p.heading {
+	color: #330099;
+	font-size: 4em;
+	text-align: center;
+}
+.left_sep {
+	background-color: #330099;
+}
+.left_side {
+	background-color: #dddddd;
+}
+
+.left_link_bar a:visited {
+	color: yellow;
+}
+.left_detail, .left_detail a:link {
+	# text-decoration: none;
+	color: #330099;
+	background-color: #dddddd;
+}
+
+.left_detail a:visited {
+	# text-decoration: none;
+	color: #666666;
+}
+
+.left_sect_heading {
+	background-color: #cccccc;
+}
+
+
+div.homelinks {
+	padding: 10px;
+}
+.homelinks a:link {
+	color: white;
+}
+.homelinks a:visited {
+	color: white;
+}
+.homelinks, td.homelinks, td.homelinks a:link, td.homelinks a.visited  {
+	background-color: #999999;
+	font-weight: bold;
+	color: white;
+}
+td.projlist, td.projlist a:visited, td.projlist a:link {
+	background-color: #CCCCCC;
+	color: black;
+}

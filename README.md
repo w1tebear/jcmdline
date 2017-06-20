@@ -1,48 +1,119 @@
-The jcmdline package is used to process command line parameters from
-a Java program.
+The jcmdline package is a Java package with the following goals: 
 
-This directory contains the source necessary to build the jcmdline java
-package.  It also contains a prebuilt jar file, jcmdline-<rel>.jar.  The 
-jar file is all that is necessary to use this package - make sure
-that it is placed somewhere in the CLASSPATH.
+* Facilitate parsing/handling of command line parameters.
 
-The javadoc API can be found under the doc directory.
+* Add consistency to command line parameter parsing and command usage display through all executables of a Java application.
 
-A User Guide that provides information on effective use of this program
-is accessible from the Description section of the package summary page
-in the javadoc API.  (It is also available in the doc-files directory
-in the package source directory).
+* Automatically generate a command usage based upon defined command line parameters..
 
-The project builds with ant.  To obtain a copy of ant, go to 
-http://jakarta.apache.org/ant/index.html.  Execute:
+Features of the package include: 
 
-    ant -projecthelp
+* Parses command line options and arguments.
 
-for a list of build targets.
+* Supports frequently used parameter types - booleans, strings, integers, dates, file names...
 
-Unit tests require JUnit, available from http://www.junit.org/index.htm.
+* Performs common validation tasks - checks for number ranges, file/directory attributes, values that must be from a specified set, etc..
 
-Notes for developers that wish to work on this project may be found in file
-devinfo.html.
+* Displays neatly formatted usage and error message in response to parameter specification errors.
 
-The contents of this package are subject to the Mozilla Public License Version 
-1.1 (the "License"); you may not use this file except in compliance with 
-the License. You may obtain a copy of the License at 
-http://www.mozilla.org/MPL/, or view it in file LICENSE, included with
-this distribution.
+* Provides support for commonly used command line options (such as -help and -version) and a means to standardize command line options across all executables of a project.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the
-License.
+* Supports hidden options.
 
-The Original Code is the Java jcmdline (command line management) package.
+# Example
 
-The Initial Developer of the Original Code is Lynne Lawrence.
+```java
+    public static void main(String[] args) {
 
-Portions created by the Initial Developer are Copyright (C) 2002
-the Initial Developer. All Rights Reserved.
+        // command line arguments
+        StringParam patternArg =
+            new StringParam("pattern", "the pattern to match",
+                            StringParam.REQUIRED);
+        FileParam filesArg =
+            new FileParam("file",
+                          "a file to be processed - defaults to stdin",
+                          FileParam.IS_FILE &amp; FileParam.IS_READABLE,
+                          FileParam.OPTIONAL,
+                          FileParam.MULTI_VALUED);
 
-Contributor(s): Lynne Lawrence <lynneglawrence02@gmail.com>
+        // command line options
+        BooleanParam ignorecaseOpt =
+            new BooleanParam("ignoreCase", "ignore case while matching");
+        BooleanParam listfilesOpt = 
+            new BooleanParam("listFiles", "list filenames containing pattern");
 
-A copy of the MPL is available in file MPL-1.1.txt.
+        // a help text because we will use a HelpCmdLineHandler so our
+        // command will display verbose help with the -help option
+        String helpText = "This command prints to stdout all lines within " +
+                          "the specified files that contain the specified " +
+                          "pattern.\n\n" + 
+                          "Optionally, the matching may be done without " +
+                          "regard to case (using the -ignorecase option).\n\n" +                          
+                          "If the -listFiles option is specified, only the " + 
+                          "names of the files containing the pattern will be " +                 
+                          "listed.  In this case, files to process must be " +
+                          "specified on the command line";
+                         
+                        
+        CmdLineHandler cl =
+            new VersionCmdLineHandler("V 5.2",
+            new HelpCmdLineHandler(helpText,
+                "kindagrep",
+                "find lines in files containing a specified pattern",
+                new Parameter[] { ignorecaseOpt, listfilesOpt },
+                new Parameter[] { patternArg, filesArg } ));
+                
+        cl.parse(args);
+```
+
+Produces the following usage when run with a '-help' option:
+
+```
+kindagrep - find lines in files containing a specified pattern
+
+Usage: kindagrep [options] pattern [file],[file]...
+
+where:
+
+pattern = the pattern to match (required)
+file    = a file to be processed - defaults to stdin (optional)
+
+and options are:
+
+-?           prints usage to stdout; exits (optional)
+-h           prints usage to stdout; exits (optional)
+-help        displays verbose help information (optional)
+-ignoreCase  ignore case while matching (optional)
+-listFiles   list filenames containing pattern (optional)
+-version     displays command's version (optional)
+
+Option tags are not case sensitive, and may be truncated as long as they remain
+unambiguous.  Option tags must be separated from their corresponding values by
+whitespace, or by an equal sign.  Boolean options (options that require no
+associated value) may be specified alone (=true), or as 'tag=value' where value
+is 'true' or 'false'.
+
+This command prints to stdout all lines within the specified files that contain
+the specified pattern.
+
+Optionally, the matching may be done without regard to case (using the
+-ignorecase option).
+
+If the -listFiles option is specified, only the names of the files containing
+the pattern will be listed.  In this case, files to process must be specified on
+the command line
+```
+
+For more information, see the [User Guide](docs/apidocs/jcmdline/doc-files/userguide.html).
+
+# Development Status
+
+This package is stable and production worthy.
+
+At present it supports only the English language. All strings
+are handled via ResourceBundle, though, and any assistance with
+translation to other languages would be greatly appreciated!
+
+# Licence
+
+This software is open source and is provided under the [Mozilla Public License V1.1](http://www.mozilla.org/MPL/).

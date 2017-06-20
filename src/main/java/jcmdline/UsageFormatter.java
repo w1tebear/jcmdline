@@ -38,56 +38,67 @@ import java.util.Map;
  * Used to format a command's usage.
  * 
  * @author Lynne Lawrence
- * @version jcmdline Rel. @VERSION@ $Id: UsageFormatter.java,v 1.2 2002/12/07 14:22:06 lglawrence Exp $
+ * @version jcmdline Rel. @VERSION@ $Id: UsageFormatter.java,v 1.2 2002/12/07
+ *          14:22:06 lglawrence Exp $
  * @see CmdLineHandler
  */
 public interface UsageFormatter {
 
-    /**
-     * Gets an error message, reformatted in a manner to "go well with" the usage statement. For instance,
-     * 
-     * <pre>
-     * formatErrorMsg(&quot;invalid filename&quot;)
-     * </pre>
-     * 
-     * Might return:
-     * 
-     * <pre>
-     *    &lt;b&gt;ERROR:&lt;/b&gt; invalid filename
-     * </pre>
-     * 
-     * @param msg
-     *            the text of the error message
-     * @return the reformatted error message
-     */
-    public String formatErrorMsg(String msg);
+	/**
+	 * Gets an error message, reformatted in a manner to "go well with" the
+	 * usage statement. For instance,
+	 * 
+	 * <pre>
+	 * formatErrorMsg(&quot;invalid filename&quot;)
+	 * </pre>
+	 * 
+	 * Might return:
+	 * 
+	 * <pre>
+	 *    &lt;b&gt;ERROR:&lt;/b&gt; invalid filename
+	 * </pre>
+	 * 
+	 * @param msg
+	 *            the text of the error message
+	 * @return the reformatted error message
+	 */
+	public String formatErrorMsg(String msg);
 
-    /**
-     * gets the usage for the command
-     * 
-     * @param showHidden
-     *            if <code>true</code>, hidden parameters will be displayed
-     * @return the usage for the command
-     */
-    public String formatUsage(String cmdName, String cmdDesc, Map<String, Parameter<?>> opts, List<Parameter<?>> args,
-            boolean showHidden);
+	/**
+	 * Gets the usage for the command.
+	 * 
+	 * @param cmdName
+	 *            the name of the command (specify 'java -jar xxx.jar' if
+	 *            command will not be wrapped by a shell script).
+	 * @param cmdDesc
+	 *            a brief description of the command
+	 * @param opts
+	 *            the command options
+	 * @param args
+	 *            the command arguments
+	 * @param showHidden
+	 *            true if hidden options and arguments are to be displayed
+	 * @return the formatted usage
+	 */
+	public String formatUsage(String cmdName, String cmdDesc, Map<String, Parameter<?>> opts, List<Parameter<?>> args,
+			boolean showHidden);
 
-    /**
-     * Gets the maximum line length to use for usage display.
-     * 
-     * @return the maximum line length to use for usage display
-     * @see #setLineLength(int) setLineLength()
-     */
-    public int getLineLength();
+	/**
+	 * Gets the maximum line length to use for usage display.
+	 * 
+	 * @return the maximum line length to use for usage display
+	 * @see #setLineLength(int) setLineLength()
+	 */
+	public int getLineLength();
 
-    /**
-     * Sets the maximum line length to use for usage display. The maximum line length defaults to 80 if this method is
-     * not called to set it otherwise.
-     * 
-     * @param lineLength
-     *            the maximum line length to use for usage display
-     * @see #getLineLength()
-     */
-    public void setLineLength(int lineLength);
+	/**
+	 * Sets the maximum line length to use for usage display. The maximum line
+	 * length defaults to 80 if this method is not called to set it otherwise.
+	 * 
+	 * @param lineLength
+	 *            the maximum line length to use for usage display
+	 * @see #getLineLength()
+	 */
+	public void setLineLength(int lineLength);
 
 }

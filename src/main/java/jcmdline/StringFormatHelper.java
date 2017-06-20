@@ -160,8 +160,6 @@ public class StringFormatHelper {
      * Formats a "labeled list" (like a bullet or numbered list, only with labels for each item).
      * <P>
      * Example:
-     * <p>
-     * 
      * <pre>
      * System.out
      *         .println(formatLabeledList(new String[] { "old_file", "new_file" },

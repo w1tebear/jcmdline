@@ -78,7 +78,7 @@ public class IntParam extends AbstractParameter<Integer> {
 	 *            a description of the parameter, suitable for display in a
 	 *            usage statement
 	 * @throws IllegalArgumentException
-	 *             if <code>tag</code> or <desc> are invalid.
+	 *             if <code>tag</code> or <code>desc</code> are invalid.
 	 * @see AbstractParameter#setTag(String) setTag()
 	 * @see AbstractParameter#setDesc(String) setDesc()
 	 */

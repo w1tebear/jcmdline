@@ -95,7 +95,6 @@ import java.util.Collection;
  *     .
  * </pre>
  * <P>
- * <P>
  * <a name="helptext"><b>Help Text Formatting</b></a>
  * <P>
  * The help text for a command will be formatted for output such that:

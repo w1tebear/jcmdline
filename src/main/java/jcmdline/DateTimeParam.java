@@ -33,7 +33,6 @@
 
 package jcmdline;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -131,7 +130,7 @@ public class DateTimeParam extends AbstractParameter<Date> {
 	 *            a description of the parameter, suitable for display in a
 	 *            usage statement
 	 * @throws IllegalArgumentException
-	 *             if <code>tag</code> or <desc> are invalid.
+	 *             if <code>tag</code> or <code>desc</code> are invalid.
 	 * @see AbstractParameter#setTag(String) setTag()
 	 * @see AbstractParameter#setDesc(String) setDesc()
 	 */
@@ -375,7 +374,7 @@ public class DateTimeParam extends AbstractParameter<Date> {
 	 * @param val
 	 *            the String to be converted
 	 * @return the Date object represented by <code>val</code>
-	 * @throws ParseException
+	 * @throws CmdLineException
 	 *             if <code>val</code> will not parse to a Date.
 	 */
 	public Date convertValue(String val) throws CmdLineException {

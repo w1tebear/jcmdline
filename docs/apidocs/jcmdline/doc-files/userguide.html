@@ -1,0 +1,760 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the Java jcmdline (command line management) package.
+   -
+   - The Initial Developer of the Original Code is Lynne Lawrence.
+   - 
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):    Lynne Lawrence <lynneglawrence02@gmail.com>
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<head>
+<meta name="generator" content="Bluefish 1.0.7">
+<title>jcmdline Package User Guide Release @VERSION@</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<!-- Start TOC entry - do not edit between markers -->
+<a name="toc"></a><div class="toc"><h1>jcmdline Package User Guide Release @VERSION@</h1><a href="#toc1">Introduction</a><br>
+<a href="#toc2">Obtaining this Document</a><br>
+<a href="#toc3">Some Semantics</a><br>
+<a href="#toc4">Quick Start</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc5">Define The Parameters</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc6">Create a CmdLineHandler</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc7">Parse the Command Line</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc8">Access the Processed Parameters</a><br>
+<a href="#toc9">Parameters</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc10">When Supplied Parameters Are Not Adequate</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc11">Post-processing Parameters</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc12">Creating Custom Parameter Classes</a><br>
+<a href="#toc13">Command Line Handlers</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc14">Parsers</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc15">The PosixCmdLineParser</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc16">Usage Formatters</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc17">CmdLineHandler Decorators</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#toc18">Writing CmdLineHandler Decorators</a><br>
+<a href="#toc19">Best Practices Suggestions</a><br>
+</div>
+<!-- End TOC entry -->
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc1"></a>
+<!-- End TOC entry -->
+<h1>Introduction</h1>
+
+The <i>jcmdline</i> package contains classes used to parse and
+process command line options and arguments from a Java program.
+This package was written with the following goals: 
+<ul>
+<li>Simplify processing of command line options and
+parameters.</li>
+
+<li>Encourage uniformity of command line conventions and usage
+display throughout a project.</li>
+
+<li>Make it difficult to add a command line option without its
+being documented in the command usage.</li>
+</ul>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc2"></a>
+<!-- End TOC entry -->
+<h1>Obtaining this Document</h1>
+
+The most current version of this user guide is supplied in the
+<em>doc-files</em> directory for the jcmdline package. It is
+accessible from a link in the <strong><em>Description</em></strong>
+section of the package summary of the jcmdline API javadoc and/or
+may be downloaded with the source files. 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc3"></a>
+<!-- End TOC entry -->
+<h1>Some Semantics</h1>
+
+Throughout this document, the following semantics are used. 
+<dl>
+<dt>option</dt>
+
+<dd>A command line <em>option</em> is comprised of an identifying
+"tag", typically preceded by a dash or two, and optionally requires
+a value. A typical <em>option</em> might be "<code>-outfile
+/tmp/myfile</code>".</dd>
+
+<dt>argument</dt>
+
+<dd>A command line <em>argument</em> is specified on the command
+line after all of the options and their values.</dd>
+
+<dt>parameter</dt>
+
+<dd>A command line <em>parameter</em> is an <em>option</em> or an
+<em>argument</em>.</dd>
+</dl>
+
+For instance: 
+<pre>
+    javadoc -d /home/html -sourcepath /home/src java.awt
+            \__________          _____________/ \      /
+                         options                arguments
+            \______________             _______________/
+                             parameters
+</pre>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc4"></a>
+<!-- End TOC entry -->
+<h1>Quick Start</h1>
+
+Using the <i>jcmdline</i> package requires the following steps: 
+<ul>
+<li>Define the option and argument <a href="#param">Parameters</a>
+the command will accept.</li>
+
+<li>Create a <a href="#clh">CmdLineHandler</a> using the defined
+options and arguments.</li>
+
+<li>Call the <code>parse()</code> method of the
+CmdLineHandler.</li>
+
+<li>Access the values that have been set in the parameters.</li>
+</ul>
+
+<a name="ex1"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc5"></a>
+<!-- End TOC entry -->
+<h2>Define The Parameters</h2>
+
+For this example, set up some parameters for a program that will
+work sort of like the Unix "grep" command: 
+<pre>
+    public static void main(String[] args) {
+
+        // command line arguments
+        StringParam patternArg =
+            new StringParam("pattern", "the pattern to match",
+                            StringParam.REQUIRED);
+        FileParam filesArg =
+            new FileParam("file",
+                          "a file to be processed - defaults to stdin",
+                          FileParam.IS_FILE &amp; FileParam.IS_READABLE,
+                          FileParam.OPTIONAL,
+                          FileParam.MULTI_VALUED);
+
+        // command line options
+        BooleanParam ignorecaseOpt =
+            new BooleanParam("ignoreCase", "ignore case while matching");
+        BooleanParam listfilesOpt = 
+            new BooleanParam("listFiles", "list filenames containing pattern");
+
+        // a help text because we will use a HelpCmdLineHandler so our
+        // command will display verbose help with the -help option
+        String helpText = "This command prints to stdout all lines within " +
+                          "the specified files that contain the specified " +
+                          "pattern.\n\n" + 
+                          "Optionally, the matching may be done without " +
+                          "regard to case (using the -ignorecase option).\n\n" +                          
+                          "If the -listFiles option is specified, only the " + 
+                          "names of the files containing the pattern will be " +                 
+                          "listed.  In this case, files to process must be " +
+                          "specified on the command line";
+</pre>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc6"></a>
+<!-- End TOC entry -->
+<h2>Create a CmdLineHandler</h2>
+
+Next a <code>CmdLineHandler</code> is instantiated to process the
+command line: 
+<pre>
+        CmdLineHandler cl =
+            new VersionCmdLineHandler("V 5.2",
+            new HelpCmdLineHandler(helpText,
+                "kindagrep",
+                "find lines in files containing a specified pattern",
+                new Parameter[] { ignorecaseOpt, listfilesOpt },
+                new Parameter[] { patternArg, filesArg } ));
+</pre>
+
+The <code>CmdLineHandler</code> used here uses some supplied <a
+href="#decorators">Decorators</a> to provide some typical options.
+The options supported by this <code>CmdLineHandler</code>, in
+addition to those defined by the program itself are: <code>-h, -?,
+-h!, -help, -help!, -version</code> (see the information on <a
+href="#hidden">hidden parameters</a> for the h! and help!
+options).. 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc7"></a>
+<!-- End TOC entry -->
+<h2>Parse the Command Line</h2>
+
+Now parse the command line: 
+<pre>
+        cl.parse(args);
+</pre>
+
+The <code>parse()</code> method will not return if the command line
+does not validate - instead the command usage and an error message
+will be displayed and the program will exit with exit status = 1
+(an option may be specified to the <code>CmdLineHandler</code> to
+modify this behavior to throw an exception instead, if desired). 
+<p>The usage and error message displayed when a non-existent file
+is specified is:</p>
+
+<pre>
+kindagrep - find lines in files containing a specified pattern
+
+Usage: kindagrep [options] pattern [file],[file]...
+
+where:
+
+pattern = the pattern to match (required)
+file    = a file to be processed - defaults to stdin (optional)
+
+and options are:
+
+-?           prints usage to stdout; exits (optional)
+-h           prints usage to stdout; exits (optional)
+-help        displays verbose help information (optional)
+-ignoreCase  ignore case while matching (optional)
+-listFiles   list filenames containing pattern (optional)
+-version     displays command's version (optional)
+
+Option tags are not case sensitive, and may be truncated as long as they remain
+unambiguous.  Option tags must be separated from their corresponding values by
+whitespace, or by an equal sign.  Boolean options (options that require no
+associated value) may be specified alone (=true), or as 'tag=value' where value
+is 'true' or 'false'.
+
+ERROR: Invalid name (nosuchfile) specified for &lt;file&gt;, must be an existing,
+       readable, file.
+</pre>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc8"></a>
+<!-- End TOC entry -->
+<h2>Access the Processed Parameters</h2>
+
+Following the call to the <code>CmdLineHandler</code>, it can be
+assumed that: 
+<ul>
+<li>All <b>REQUIRED</b> options and arguments have values.</li>
+
+<li>All parameters with a restricted set of acceptable values are
+set to one of the specified values.</li>
+
+<li>Any type-specific validation for a particular parameter type
+has been performed. For instance, in the above example, it can be
+counted on that any <code>File</code> object returned by the
+<code>getFiles()</code> call to parameter <code>filesArg</code>
+will, in fact, represent an existing, readable file.</li>
+</ul>
+
+The program can now access the processed parameters and their
+values: 
+<pre>
+        // this can't be check by CmdLineHandler
+        if (listfilesOpt.isTrue() &amp;&amp; ! filesArg.isSet()) {
+            cl.exitUsageError(
+                "filename(s) must be specified with -listFiles option");
+        }
+
+        String pattern = patternArg.getValue();
+
+        if (filesArg.isSet()) {
+            for (File f : filesArg.getValues()) { 
+                findPattern(pattern, new FileInputStream(f), listfilesOpt.isTrue());
+            }
+        } else {
+            findPattern(pattern, System.in, false);
+        }
+</pre>
+
+Note that the relationship between the <code>listfilesOpt</code>
+and <code>filesArg</code> is not checked by the
+<code>CmdLineHandler</code>, but must be checked explicitly. The
+<code>exitUsageError()</code> method of the
+<code>CmdLineHandler</code> is then used to display the usage and
+error message in case of error. <a name="param"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc9"></a>
+<!-- End TOC entry -->
+<h1>Parameters</h1>
+
+All command line options and arguments are represented by <a href=
+"../Parameter.html">Parameter</a> objects. All parameters support
+the following characteristics: 
+<table summary="parameter attributes">
+<tr valign="top">
+<td><b>tag</b></td>
+<td>The <em>tag</em> is used to identify the parameter. 
+<p>For <span class="definedTerm">options</span>, the <em>tag</em>
+indicates how the option is specified, for instance, a <em>tag</em>
+of "outfile" indicates an option specified like "-outfile
+/tmp/myfile".</p>
+
+<p>For command line <span class="definedTerm">arguments</span>, the
+tag is typically used by the usage display formatter to identify
+the argument.</p>
+</td>
+</tr>
+
+<tr valign="top">
+<td><b>description</b></td>
+<td>The <em>description</em> is used by the usage display formatter
+to describe a parameter.</td>
+</tr>
+
+<tr valign="top">
+<td><b>optional indicator</b></td>
+<td>The <em>optional indicator</em> indicates whether a parameter
+is optional or required. If a parameter is configured to be
+required, the <a href="../CmdLineHandler.html">CmdLineHandler</a>
+will reject the command line if the parameter is not
+specified.</td>
+</tr>
+
+<tr valign="top">
+<td><b>multi-valued</b></td>
+<td>A parameter that is <em>multi-valued</em> can be specified more
+than once. This is frequently used with the final command line
+<span class="definedTerm">argument</span> when the command accepts
+multiple instances. The above <a href="#ex1">example</a>
+demonstrates this type of usage.</td>
+</tr>
+
+<tr valign="top">
+<td><b>acceptable values</b></td>
+<td>Most <a href="../Parameter.html">Parameter</a> types allow the
+programmer to specify a set of values that the parameter will
+accept. The command line is rejected if a user attempts to set the
+parameter to any non-specified value.</td>
+</tr>
+
+<tr valign="top">
+<td><b><a name="hidden">hidden indicator</a></b></td>
+<td>The <em>hidden</em> indicator is used to indicate whether a
+parameter is hidden or public. By default, all paramters are
+public, meaning that they will be described in a regular usage
+statement. 
+<p>Optionally, a parameter may be designated hidden, in which case
+it may still be specified by the user, but is not displayed in a
+normal usage statement. Who has not shipped code supporting "debug"
+or "trace" options that might be performance impacting and thus not
+be suitable for publication to the casual user? This indicator is
+for that type of option.</p>
+
+<p>Both the <a href=
+"../DefaultCmdLineHandler.html">DefaultCmdLineHandler</a> and <a
+href="../HelpCmdLineHandler.html">HelpCmdLineHandler</a> support
+(hidden) command line options that will cause hidden options and
+help to be displayed.</p>
+</td>
+</tr>
+</table>
+
+<p>The <em>jcmdline</em> package comes with <code>Parameter</code>
+classes to handle several types of common parameters. See the list
+of subclasses for <a href=
+"../AbstractParameter.html">AbstractParameter</a> for a complete
+list. As of this writing, the following <code>Parameter</code>
+classes are available:</p>
+
+<table summary="supplied Parameter classes">
+<tr valign="top">
+<td><a href="../StringParam.html">StringParam</a></td>
+<td>handles generic string parameters - can be used for any
+parameter for which a more specific class does not exist</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../FileParam.html">FileParam</a></td>
+<td>handles filename parameters</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../IntParam.html">IntParam</a></td>
+<td>handles numeric integer parameters</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../BooleanParam.html">BooleanParam</a></td>
+<td>handles boolean parameters</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../DateTimeParam.html">DateTimeParam</a></td>
+<td>handles parameters consisting of a date and time</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../DateParam.html">DateParam</a></td>
+<td>handles parameters consisting of a date only</td>
+</tr>
+
+<tr valign="top">
+<td><a href="../TimeParam.html">TimeParam</a></td>
+<td>handles parameters consisting of a time only</td>
+</tr>
+</table>
+
+<p>If an application supports several different commands, more than
+one of which accepts a new and different type of Parameter, it is
+strongly suggested that a new subclass of <a href=
+"../AbstractParameter.html">AbstractParameter</a> be written to
+handle that type. This will provide greater consistency amongst the
+commands in the application.</p>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc10"></a>
+<!-- End TOC entry -->
+<h2>When Supplied Parameters Are Not Adequate</h2>
+
+It may sometimes be the case that the Parameter classes supplied by
+the <em>jcmdline</em> package cannot completely validate a
+parameter. For instance, perhaps a command line parameter must not
+only be a readable file, but it must also be a file whose name ends
+in ".html". For cases where the supplied parameters just don't
+quite do it, there are a couple of options: 
+<ul>
+<li>Post process the parameter after the <code>parse()</code>
+call</li>
+
+<li>Create a new Parameter class to handle the validation</li>
+</ul>
+
+<a name="postproc"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc11"></a>
+<!-- End TOC entry -->
+<h3>Post-processing Parameters</h3>
+
+The <a href="../CmdLineHandler.html">CmdLineHandler</a> interface
+supports a method, <code>exitUsageError()</code>, that can be used
+to exit the program, displaying the usage, just as it would have
+been exited if an error had been detected during the parse. This
+method should be called if there is an error when a parameter is
+post-processed. 
+<p>The following code snippet demonstrates use of the
+<code>exitUsageError()</code> method when a filename parameter is
+validated to end with ".html" after the command line is parsed by
+the <code>CmdLineHandler</code>:</p>
+
+<pre>
+    cl.parse(args);
+    if (! myfile.getFile().getPath().endsWith(".html")) {
+        cl.exitUsageError("Filename specified for '" +
+                          myfile.getTag() + "' must end with '.html'");
+    }
+</pre>
+
+<a name="customparam"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc12"></a>
+<!-- End TOC entry -->
+<h3>Creating Custom Parameter Classes</h3>
+
+If an application requires custom parameter validation in more than
+one place, it would be better to create a custom Parameter class to
+handle the validation. A template type of class, <a href=
+"../AbstractParameter.html">AbstractParameter</a>, has been
+provided to make this easier. Instructions for how to use this
+class to create a custom Parameter class are in the <a href=
+"../AbstractParameter.html">javadoc</a> for the class. <a name=
+"clh"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc13"></a>
+<!-- End TOC entry -->
+<h1>Command Line Handlers</h1>
+
+The CmdLineHandler classes control the parsing and validation of
+command line parameters. This package comes with one basic
+CmdLineHandler, named, coincidentally, <a href=
+"../BasicCmdLineHandler">BasicCmdLineHandler</a> . 
+<p>Although the <code>BasicCmdLineHandler</code> is, technically,
+the only "real" command line handler supplied by this package,
+there are several "<a href="#decorators">decorator</a>" command
+line handlers that can be used to add functionality. Typically, a
+program will use one or more of these "decorator" classes when
+making use of this package.</p>
+
+<p>The CmdLineHandler performs the following functions:</p>
+
+<ul>
+<li>Accepts the setup information defining the command name (which
+is frequently different from the name of the class that implements
+the command), command description, and the options and arguments
+the command will accept.</li>
+
+<li>Supports a <code>parse()</code> method that: 
+<ul>
+<li>Calls its parser to parse and set the command line options and
+arguments.</li>
+
+<li>Verifies that all required parameters have been set with
+values.</li>
+
+<li>Takes appropriate action if the command line is in error. The
+"standard" appropriate action in case of error is to display the
+command's usage statement and exit.</li>
+</ul>
+</li>
+</ul>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc14"></a>
+<!-- End TOC entry -->
+<h2>Parsers</h2>
+
+A <code>CmdLineHandler</code> uses a <a href=
+"../CmdLineParser.html">CmdLineParser</a> to perform the actual
+parsing of the command line. There is only one
+<code>CmdLineParser</code> that comes with the <em>jcmdline</em>
+package - the <a href=
+"../PosixCmdLineParser.html">PosixCmdLineParser</a>, but the
+capability exists for a user to create and use their own parser. 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc15"></a>
+<!-- End TOC entry -->
+<h3>The PosixCmdLineParser</h3>
+
+The <code>PosixCmdLineParser</code>, basically, accepts <span
+class="definedTerm">options</span> preceded by either a '-', or a
+'--', that may, optionally, have an associated value separated from
+the option "tag" by a space or an '='. Command line <span class=
+"definedTerm">options</span> end with the first <span class=
+"definedTerm">parameter</span> that does <b>not</b> start with a
+'-' or a '--', or when a '--' appears by itself as a parameter. A
+'--' must be used alone to signal the end of <span class=
+"definedTerm">options</span> when the first command line <span
+class="definedTerm">argument</span> starts with a '-'. 
+<p>Option tags are parsed in a case insensitive manner. Truncated
+option tags are accepted as long as the tag remains un-ambiguous
+(execpt for hidden options, whose tags must be fully
+specified).</p>
+
+<p>A BooleanParam may be specified either without a value (in which
+case it is set to <code>true</code>), or with an '=' followed by
+its value. If a BooleanParam is specified more than once, the final
+specification takes precedence.</p>
+
+<p>Using the <code>PosixCmdLineParser</code>, the following command
+lines are all equivalent:</p>
+
+<pre>
+java Concat -delete -out myoutfile infile1 infile2
+java Concat -d -o myoutfile infile1 infile2
+java Concat -delete=true -o myoutfile infile1 infile2
+java Concat -d=true -o=myoutfile infile1 infile2
+java Concat -Delete -OUT myoutfile infile1 infile2
+</pre>
+
+See the <a href="../PosixCmdLineParser.html">API</a> for
+<code>PosixCmdLineParser</code> for a more complete description. 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc16"></a>
+<!-- End TOC entry -->
+<h3>Usage Formatters</h3>
+
+A <code>CmdLineParser</code> is configured with a <a href=
+"../UsageFormatter.html">UsageFormatter</a> that it uses to format
+command usage and error messages. The only
+<code>UsageFormatter</code> that comes with the <em>jcmdline</em>
+package is the <a href=
+"../TextUsageFormatter.html">TextUsageFormatter</a>, but the option
+is there for a user to define their own. <a name="decorators"></a> 
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc17"></a>
+<!-- End TOC entry -->
+<h2>CmdLineHandler Decorators</h2>
+
+A Decorator, or Wrapper, pattern has been set up to facilitate the
+implementation of <span class="definedTerm">options</span> whose
+processing can take place entirely at option parse time. This
+pattern was chosen in order that programmers can mix and match
+options that seem useful to their particular applications. It
+works, basically, as follows: 
+<ul>
+<li>Each "decorator" class implements the <a href=
+"../CmdLineHandler.html">CmdLineHandler</a> interface.</li>
+
+<li>An object of type <code>CmdLineHandler</code> is passed to the
+constructor of the "decorator" class (some have constructors that
+will generate their own underlying
+<code>CmdLineHandler</code>).</li>
+
+<li>By default, all methods pass through to the underlying
+<code>CmdLineHandler</code>. Functionality is added by the addition
+of processing during selected method calls.</li>
+</ul>
+
+<p>Because each "decorator" class implements the
+<code>CmdLineHandler</code> interface, and each accepts a
+<code>CmdLineHandler</code> as its base handler at construction,
+"decorator" classes can be "nested".</p>
+
+<p><code>CmdLineHandler</code> decorator classes that are supplied
+with the <em>jcmdline</em> package include the following. All of
+these classes take their option tags from a resource bundle. The
+values defined for English are used in the descriptions.</p>
+
+<table summary="CmdLineHandler decorator classes">
+<tr valign="top">
+<td><a href=
+"../DefaultCmdLineHandler.html">DefaultCmdLineHandler</a></td>
+<td>A <code>CmdLineHandler</code> that implements options that will
+cause command usage to be displayed. The option tags are "-h" or
+"-?" to display regular usage, "-h!" to display a usage that
+includes hidden parameters.</td>
+</tr>
+
+<tr valign="top">
+<td><a href=
+"../HelpCmdLineHandler.html">HelpCmdLineHandler</a></td>
+<td>A <code>CmdLineHandler</code> that implements options that will
+cause command usage and a more verbose help message to be
+displayed. The option tags are "-help" to display regular help and
+"-help!" to display a help text that includes hidden
+parameters.</td>
+</tr>
+
+<tr valign="top">
+<td><a href=
+"../VersionCmdLineHandler.html">VersionCmdLineHandler</a></td>
+<td>A <code>CmdLineHandler</code> that implements an option that
+will cause the command version to be displayed. The option tag is
+"-version".</td>
+</tr>
+
+<tr valign="top">
+<td><a href=
+"../LoggerCmdLineHandler.html">LoggerCmdLineHandler</a></td>
+<td>A <code>CmdLineHandler</code> that implements an option that
+supports setting the logging level for the root logger and adds a
+StreamHandler to the root logger to manage the messages. See the
+java.util.logging package for information on java logging. The
+option tag is "-log" and it requires a value that is a valid,
+localized, <code>Level</code> string.</td>
+</tr>
+</table>
+
+These classes may be used separately, or together. For instance, to
+use a <code>CmdLineHandler</code> that supports the "-h", "-?",
+"-h!", "-help", "-help!", and "-version" command line options, as
+well as any command specific options and arguments, the following
+would work: 
+<pre>
+public static void main(String args) {
+    // define options and arguments
+    .
+    CmdLineHandler clh = 
+        new HelpCmdLineHandler(helpText,
+        new VersionCmdLineHandler(myVersion,
+        new DefaultCmdLineHandler(cmdName,
+                                  cmdDescription,
+                                  options,
+                                  args)));
+    clh.parse(args);
+    .
+    .
+</pre>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc18"></a>
+<!-- End TOC entry -->
+<h2>Writing CmdLineHandler Decorators</h2>
+
+The class <a href=
+"../AbstractHandlerDecorator.html">AbstractHandlerDecorator</a> is
+supplied with the <em>jcmdline</em> package to facilitate the
+writing of <code>CmdLineHandler</code> decorator classes. This
+class implements all methods of the <a href=
+"../CmdLineHandler.html">CmdLineHandler</a> interface by, for the
+most part, delegating to a "contained" <code>CmdLineHandler</code>
+object. Using this class, a new decorator class can be created by
+implementing a single method and the required constructors. 
+<p>The best instructions for using this class are to be found in
+the <a href="../AbstractHandlerDecorator.html">javadoc</a> for
+<code>AbstractHandlerDecorator</code>, so they will not be repeated
+here.</p>
+
+
+<!-- Start TOC entry - do not edit between markers -->
+<p><a href="#toc">[toc]</a><a name="toc19"></a>
+<!-- End TOC entry -->
+<h1>Best Practices Suggestions</h1>
+
+Following are suggestions from the author of this package for how
+to get the best results, particularly when your application
+includes multiple executables. 
+<ul>
+<li>If several of the executables take the same type of parameter,
+and there is not already a parameter tailored for it, create a new
+subclass of <a href=
+"../AbstractParameter.html">AbstractParameter</a> to manage it. For
+instance, if several of your commands take an email address
+parameter, it would be useful to create an <code>EmailParam</code>
+that would accept and validate the passed email address.</li>
+
+<li>Create your own <code>CmdLineHandler</code>, based on a
+preferred collection of existing <a href=
+"AbstractHandlerDecorator.html">AbstractHandlerDecorator</a>
+classes and what ever other options that might be desirable. This
+has a couple of advantages: 
+<ul>
+<li>All commands share the same core command line options (like
+-version, -h, -help...), so behave in a consistent manner.</li>
+
+<li>Help documentation for common options can be written once.</li>
+
+<li>It makes it easy to add support for new common options to all
+commands.</li>
+</ul>
+
+The basis for an application specific <code>CmdLineHandler</code>
+class that demonstrates this can be found <a href=
+"MyappCmdLineHandler.java.txt">here</a>.</li>
+</ul>
+
+<hr>
+<i>Last Updated on 10/29/02</i> 
+<address>Lynne Lawrence<br>
+<a href="mailto:lynneglawrence02@gmail.com">lynneglawrence02@gmail.com</a><br>
+</address>
+</body>
+</html>
+
